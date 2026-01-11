@@ -2,151 +2,142 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UAS - Belajar di Era Digital</title>
-
+<title>Mockup Progres Pekerjaan</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  margin: 0;
-  background: #f2f2f7;
-}
-header {
-  background: #007aff;
-  color: white;
-  padding: 15px;
-  text-align: center;
-  position: sticky;
-  top: 0;
-}
-.timer { font-weight: bold; }
-.container { padding: 15px; }
-.question {
-  background: #fff;
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 15px;
-}
-label {
-  display: block;
-  padding: 8px;
-  margin: 5px 0;
-  background: #f1f1f1;
-  border-radius: 8px;
-}
-button {
-  width: 100%;
-  padding: 15px;
-  background: #34c759;
-  color: white;
-  border: none;
-  font-size: 18px;
-  border-radius: 12px;
-}
-.explain {
-  margin-top: 10px;
-  color: #1b7c3b;
-}
+    body {font-family: Arial, sans-serif; background:#f4f6f9; padding:20px;}
+    .card {background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.1);}
+    table {width:100%; border-collapse:collapse; margin-top:15px; font-size:13px;}
+    th, td {border:1px solid #ddd; padding:6px 8px; text-align:center;}
+    th {background:#0d6efd; color:white;}
+
+    .progress-box {display:flex; align-items:center; gap:6px; justify-content:center;}
+    .bar {width:90px; height:10px; background:#eee; border-radius:5px; overflow:hidden;}
+    .fill {height:100%;}
+
+    .red {background:#dc3545;}
+    .yellow {background:#ffc107;}
+    .green {background:#198754;}
+
+    .status {
+        padding:4px 10px;
+        border-radius:6px;
+        font-weight:bold;
+        font-size:12px;
+        display:inline-block;
+    }
+    .onprogres {background:#ffc107; color:#000;}
+    .selesai {background:#198754; color:white;}
+    .invalid {background:#dc3545; color:white;}
+
+    .belum {color:#dc3545; font-weight:bold;}
 </style>
 </head>
-
 <body>
 
-<header>
-  <h3>UAS – Belajar di Era Digital</h3>
-  <div id="timer" class="timer"></div>
-</header>
+<h2>Mockup UI – Progres Pekerjaan</h2>
 
-<div class="container">
-  <div id="quiz"></div>
-  <button onclick="submitQuiz()">Submit Jawaban</button>
+<div class="card">
+    <b>Impor Data Excel:</b><br>
+    <input type="file" id="excelFile" accept=".xlsx,.xls">
+
+    <table id="tabel">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Sekolah</th>
+                <th>RBA Awal</th>
+                <th>RBA Perubahan</th>
+                <th>RBA Banper</th>
+                <th>Rekon</th>
+                <th>Input Realisasi</th>
+                <th>Saldo Awal</th>
+                <th>Keterangan</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 </div>
 
 <script>
-const questions = [
-{q:"1. Pembelajaran di era digital menekankan pada …",a:["Hafalan","Pemanfaatan teknologi","Ceramah penuh","Buku cetak"],k:1,e:"Pembelajaran digital memanfaatkan teknologi untuk efektivitas belajar."},
-{q:"2. Literasi digital berarti …",a:["Menggunakan gadget","Menggunakan teknologi secara bijak","Menghafal internet","Mengikuti tren"],k:1,e:"Literasi digital menekankan penggunaan teknologi secara kritis."},
-{q:"3. OER adalah singkatan dari …",a:["Online Education Resource","Open Education Resource","Open Educational Resources","Online Edu Reference"],k:2,e:"OER adalah sumber belajar terbuka."},
-{q:"4. Tujuan OER adalah …",a:["Membatasi akses","Mempermudah belajar","Berbayar","Tertutup"],k:1,e:"OER memberi akses belajar terbuka."},
-{q:"5. Literasi media berkaitan dengan …",a:["Menghafal berita","Menganalisis isi media","Menonton TV","Menyebar info"],k:1,e:"Literasi media fokus pada analisis konten."},
+document.getElementById("excelFile").addEventListener("change", handleFile, false);
 
-{q:"6. Media massa digital contohnya …",a:["Radio","TV analog","Media sosial","Majalah"],k:2,e:"Media sosial adalah media digital."},
-{q:"7. Ciri media digital adalah …",a:["Satu arah","Interaktif","Lambat","Statis"],k:1,e:"Media digital bersifat interaktif."},
-{q:"8. Pembelajaran digital menuntut mahasiswa …",a:["Pasif","Mandiri","Menunggu","Diam"],k:1,e:"Mahasiswa dituntut mandiri."},
-{q:"9. Literasi informasi berarti …",a:["Menyebar info","Evaluasi informasi","Menghafal","Menyalin"],k:1,e:"Literasi informasi menilai kebenaran informasi."},
-{q:"10. Hoaks biasanya memiliki ciri …",a:["Sumber jelas","Judul provokatif","Data valid","Penulis resmi"],k:1,e:"Hoaks sering memakai judul sensasional."},
+function handleFile(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+        renderTable(json);
+    };
+    reader.readAsArrayBuffer(file);
+}
 
-{q:"11. Media pembelajaran digital bertujuan …",a:["Menghibur","Mendukung belajar","Menggantikan dosen","Mengurangi tugas"],k:1,e:"Media digital mendukung proses belajar."},
-{q:"12. Contoh media digital …",a:["PowerPoint","Papan tulis","Buku tulis","Spidol"],k:0,e:"PowerPoint adalah media digital."},
-{q:"13. Hak cipta berfungsi untuk …",a:["Menghapus karya","Melindungi karya","Membatasi kreativitas","Menjual bebas"],k:1,e:"Hak cipta melindungi karya intelektual."},
-{q:"14. Lisensi terbuka berarti …",a:["Bebas tanpa aturan","Digunakan dengan syarat","Tanpa hak cipta","Dilarang"],k:1,e:"Lisensi terbuka tetap memiliki aturan."},
-{q:"15. Creative Commons adalah …",a:["Lisensi terbuka","Aplikasi","Media sosial","Website"],k:0,e:"Creative Commons adalah lisensi terbuka."},
+function percent(belanja, pendapatan) {
+    if (!pendapatan || pendapatan == 0) return 0;
+    return Math.round((belanja / pendapatan) * 100);
+}
 
-{q:"16. Warga digital harus …",a:["Acuh","Bertanggung jawab","Bebas","Anonim"],k:1,e:"Warga digital harus bertanggung jawab."},
-{q:"17. Etika digital berarti …",a:["Bersikap sopan online","Bebas berkata","Mengabaikan aturan","Anonim"],k:0,e:"Etika digital mengatur perilaku online."},
-{q:"18. Jejak digital adalah …",a:["File","Data aktivitas online","Cache","Akun"],k:1,e:"Jejak digital adalah rekam aktivitas online."},
-{q:"19. Pembelajaran daring membutuhkan …",a:["Internet","Kertas","Spidol","Papan"],k:0,e:"Pembelajaran daring membutuhkan internet."},
-{q:"20. Pembelajaran digital bersifat …",a:["Fleksibel","Kaku","Terbatas","Statis"],k:0,e:"Pembelajaran digital fleksibel."},
+function statusColor(persen){
+    if(persen == 100) return "green";
+    if(persen >= 70) return "yellow";
+    return "red";
+}
 
-{q:"21. Literasi media bertujuan agar …",a:["Tidak tertipu","Menyebar hoaks","Pasif","Percaya semua"],k:0,e:"Literasi media mencegah hoaks."},
-{q:"22. Media sosial termasuk …",a:["Media cetak","Media digital","Media analog","Manual"],k:1,e:"Media sosial termasuk media digital."},
-{q:"23. Pembelajaran abad 21 menekankan …",a:["4C","3R","2M","1A"],k:0,e:"Abad 21 menekankan 4C."},
-{q:"24. Critical thinking berarti …",a:["Berpikir kritis","Berpikir cepat","Pasif","Bebas"],k:0,e:"Critical thinking = berpikir kritis."},
-{q:"25. Kolaborasi berarti …",a:["Kerja sendiri","Kerja sama","Bersaing","Diam"],k:1,e:"Kolaborasi berarti bekerja sama."},
+function progressHTML(persen) {
+    let color = statusColor(persen);
+    return `
+        <div class="progress-box">
+            <div class="bar">
+                <div class="fill ${color}" style="width:${persen}%"></div>
+            </div>
+            <span><b>${persen}%</b> ${persen===100?"✔":""}</span>
+        </div>
+    `;
+}
 
-{q:"26. Komunikasi digital harus …",a:["Sopan","Kasar","Provokatif","Anonim"],k:0,e:"Komunikasi digital harus sopan."},
-{q:"27. Konten digital sebaiknya …",a:["Viral","Bermanfaat","Sensasi","Kontroversial"],k:1,e:"Konten sebaiknya bermanfaat."},
-{q:"28. Plagiarisme adalah …",a:["Mengutip","Mengambil tanpa sumber","Menulis ulang","Menyusun"],k:1,e:"Plagiarisme mengambil karya tanpa sumber."},
-{q:"29. Etika digital berlaku di …",a:["Dunia nyata","Dunia maya","Sekolah","Kampus"],k:1,e:"Etika digital berlaku di dunia maya."},
-{q:"30. Sumber terpercaya memiliki …",a:["Penulis jelas","Judul menarik","Iklan","Sensasi"],k:0,e:"Sumber terpercaya memiliki identitas jelas."},
+function statusRealisasiHTML(val){
+    let v = String(val).toLowerCase().trim();
 
-{q:"31. Literasi digital mencakup …",a:["Teknologi","Informasi","Etika","Semua benar"],k:3,e:"Literasi digital mencakup semuanya."},
-{q:"32. Tujuan pembelajaran digital …",a:["Efisiensi belajar","Mengurangi guru","Menyulitkan","Membatasi"],k:0,e:"Pembelajaran digital meningkatkan efisiensi."},
-{q:"33. Media interaktif memungkinkan …",a:["Respon dua arah","Pasif","Satu arah","Diam"],k:0,e:"Media interaktif memungkinkan respon dua arah."},
-{q:"34. OER bersifat …",a:["Berbayar","Terbuka","Rahasia","Tertutup"],k:1,e:"OER bersifat terbuka."},
-{q:"35. Hak cipta berlaku sejak …",a:["Didaftarkan","Dibuat","Dijual","Dipatenkan"],k:1,e:"Hak cipta berlaku sejak karya dibuat."},
+    if(v === "selesai") return `<span class="status selesai">Selesai</span>`;
+    if(v === "on progres" || v === "on progress") return `<span class="status onprogres">On Progres</span>`;
+    return `<span class="status invalid">Tidak valid</span>`;
+}
 
-{q:"36. Etika digital penting agar …",a:["Aman","Nyaman","Bertanggung jawab","Semua benar"],k:3,e:"Etika digital menciptakan ruang aman."},
-{q:"37. Media digital berkembang karena …",a:["Teknologi","Budaya","Ekonomi","Semua benar"],k:3,e:"Perkembangan media dipengaruhi banyak faktor."},
-{q:"38. Warga digital yang baik …",a:["Bijak","Santun","Bertanggung jawab","Semua benar"],k:3,e:"Warga digital ideal memiliki semua sikap ini."},
-{q:"39. Informasi valid memiliki …",a:["Sumber","Penulis","Tanggal","Semua benar"],k:3,e:"Informasi valid memiliki semua unsur tersebut."},
-{q:"40. Tujuan literasi digital …",a:["Menghindari teknologi","Menggunakan teknologi bijak","Menolak internet","Menghapus media"],k:1,e:"Literasi digital bertujuan penggunaan bijak."},
+function renderTable(data) {
+    const tbody = document.querySelector("#tabel tbody");
+    tbody.innerHTML = "";
 
-{q:"41. Pembelajaran digital mendukung …",a:["Belajar mandiri","Pasif","Terbatas","Manual"],k:0,e:"Pembelajaran digital mendorong kemandirian."},
-{q:"42. Media digital bersifat …",a:["Fleksibel","Kaku","Tetap","Statis"],k:0,e:"Media digital fleksibel."},
-{q:"43. Media harus sesuai …",a:["Tujuan belajar","Tren","Popularitas","Keinginan"],k:0,e:"Media harus sesuai tujuan pembelajaran."},
-{q:"44. Literasi informasi penting agar …",a:["Tidak tertipu","Mudah percaya","Ikut viral","Cepat menyebar"],k:0,e:"Literasi informasi mencegah hoaks."},
-{q:"45. Peran mahasiswa di era digital …",a:["Konsumen pasif","Produsen aktif","Pengamat","Pengikut"],k:1,e:"Mahasiswa diharapkan aktif dan produktif."}
-];
+    data.forEach((row, i) => {
+        let rbaAwal = percent(row.RBA_Awal_Belanja, row.RBA_Awal_Pendapatan);
+        let rbaUbah = percent(row.RBA_Perubahan_Belanja, row.RBA_Perubahan_Pendapatan);
+        let rbaBan = percent(row.RBA_Banper_Belanja, row.RBA_Banper_Pendapatan);
+        let rekon = Math.round((row.Bulan_Rekon / 12) * 100);
 
-let html="";
-questions.forEach((q,i)=>{
-  html+=`<div class="question"><b>${q.q}</b>`;
-  q.a.forEach((o,j)=>{
-    html+=`<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`;
-  });
-  html+=`<div id="exp${i}" class="explain"></div></div>`;
-});
-document.getElementById("quiz").innerHTML = html;
+        // Input Realisasi dari Excel
+        let realisasi = statusRealisasiHTML(row.Realisasi);
 
-let time=90*60;
-setInterval(()=>{
-  let m=Math.floor(time/60);
-  let s=time%60;
-  document.getElementById("timer").innerHTML=
-    "Sisa waktu: "+m+" menit "+s+" detik";
-  time--;
-},1000);
+        // Saldo Awal validasi
+        let saldo = isNaN(row["Saldo Awal"]) || row["Saldo Awal"] === ""
+            ? `<span class="belum">Belum Update</span>`
+            : Number(row["Saldo Awal"]).toLocaleString("id-ID");
 
-function submitQuiz(){
-  let score=0;
-  questions.forEach((q,i)=>{
-    let a=document.querySelector(`input[name="q${i}"]:checked`);
-    if(a && parseInt(a.value)===q.k) score++;
-    document.getElementById("exp"+i).innerHTML =
-      "✔ Jawaban benar: <b>"+q.a[q.k]+"</b><br>"+q.e;
-  });
-  alert("Nilai Anda: "+(score/45*100).toFixed(2));
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.No || i+1}</td>
+            <td style="text-align:left">${row["Nama Sekolah"] || ""}</td>
+            <td>${progressHTML(rbaAwal)}</td>
+            <td>${progressHTML(rbaUbah)}</td>
+            <td>${progressHTML(rbaBan)}</td>
+            <td>${progressHTML(rekon)}</td>
+            <td>${realisasi}</td>
+            <td>${saldo}</td>
+            <td style="text-align:left">${row.Keterangan || ""}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 </script>
 
