@@ -29,7 +29,7 @@
     .onprogres {background:#ffc107; color:#000;}
     .selesai {background:#198754; color:white;}
     .invalid {background:#dc3545; color:white;}
-    .nobanper {background:#198754; color:white;}
+    .orange {background:orange; color:#000;}
 
     .belum {color:#dc3545; font-weight:bold;}
 </style>
@@ -106,13 +106,6 @@ function statusRealisasiHTML(val){
     return `<span class="status invalid">Tidak valid</span>`;
 }
 
-function banperHTML(persen, pendapatan, belanja){
-    if(Number(pendapatan) === 0 && Number(belanja) === 0 && persen === 0){
-        return `<span class="status nobanper">Tidak Ada Banper</span>`;
-    }
-    return progressHTML(persen);
-}
-
 function renderTable(data) {
     const tbody = document.querySelector("#tabel tbody");
     tbody.innerHTML = "";
@@ -120,11 +113,25 @@ function renderTable(data) {
     data.forEach((row, i) => {
         let rbaAwal = percent(row.RBA_Awal_Belanja, row.RBA_Awal_Pendapatan);
         let rbaUbah = percent(row.RBA_Perubahan_Belanja, row.RBA_Perubahan_Pendapatan);
-        let rbaBan = percent(row.RBA_Banper_Belanja, row.RBA_Banper_Pendapatan);
+
+        let banperPend = Number(row.RBA_Banper_Pendapatan) || 0;
+        let banperBel = Number(row.RBA_Banper_Belanja) || 0;
+        let rbaBan = percent(banperBel, banperPend);
+
         let rekon = Math.round((row.Bulan_Rekon / 12) * 100);
 
+        // ==== RBA BANPER LOGIC ====
+        let banperHTML = "";
+        if(banperPend === 0 && banperBel === 0 && rbaBan === 0){
+            banperHTML = `<span class="status orange">Tidak Ada Banper</span>`;
+        } else {
+            banperHTML = progressHTML(rbaBan);
+        }
+
+        // Input Realisasi dari Excel
         let realisasi = statusRealisasiHTML(row.Realisasi);
 
+        // Saldo Awal validasi
         let saldo = isNaN(row["Saldo Awal"]) || row["Saldo Awal"] === ""
             ? `<span class="belum">Belum Update</span>`
             : Number(row["Saldo Awal"]).toLocaleString("id-ID");
@@ -135,7 +142,7 @@ function renderTable(data) {
             <td style="text-align:left">${row["Nama Sekolah"] || ""}</td>
             <td>${progressHTML(rbaAwal)}</td>
             <td>${progressHTML(rbaUbah)}</td>
-            <td>${banperHTML(rbaBan, row.RBA_Banper_Pendapatan, row.RBA_Banper_Belanja)}</td>
+            <td>${banperHTML}</td>
             <td>${progressHTML(rekon)}</td>
             <td>${realisasi}</td>
             <td>${saldo}</td>
