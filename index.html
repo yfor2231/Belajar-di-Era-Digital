@@ -29,6 +29,7 @@
     .onprogres {background:#ffc107; color:#000;}
     .selesai {background:#198754; color:white;}
     .invalid {background:#dc3545; color:white;}
+    .nobanper {background:#198754; color:white;}
 
     .belum {color:#dc3545; font-weight:bold;}
 </style>
@@ -100,10 +101,16 @@ function progressHTML(persen) {
 
 function statusRealisasiHTML(val){
     let v = String(val).toLowerCase().trim();
-
     if(v === "selesai") return `<span class="status selesai">Selesai</span>`;
     if(v === "on progres" || v === "on progress") return `<span class="status onprogres">On Progres</span>`;
     return `<span class="status invalid">Tidak valid</span>`;
+}
+
+function banperHTML(persen, pendapatan, belanja){
+    if(Number(pendapatan) === 0 && Number(belanja) === 0 && persen === 0){
+        return `<span class="status nobanper">Tidak Ada Banper</span>`;
+    }
+    return progressHTML(persen);
 }
 
 function renderTable(data) {
@@ -116,10 +123,8 @@ function renderTable(data) {
         let rbaBan = percent(row.RBA_Banper_Belanja, row.RBA_Banper_Pendapatan);
         let rekon = Math.round((row.Bulan_Rekon / 12) * 100);
 
-        // Input Realisasi dari Excel
         let realisasi = statusRealisasiHTML(row.Realisasi);
 
-        // Saldo Awal validasi
         let saldo = isNaN(row["Saldo Awal"]) || row["Saldo Awal"] === ""
             ? `<span class="belum">Belum Update</span>`
             : Number(row["Saldo Awal"]).toLocaleString("id-ID");
@@ -130,7 +135,7 @@ function renderTable(data) {
             <td style="text-align:left">${row["Nama Sekolah"] || ""}</td>
             <td>${progressHTML(rbaAwal)}</td>
             <td>${progressHTML(rbaUbah)}</td>
-            <td>${progressHTML(rbaBan)}</td>
+            <td>${banperHTML(rbaBan, row.RBA_Banper_Pendapatan, row.RBA_Banper_Belanja)}</td>
             <td>${progressHTML(rekon)}</td>
             <td>${realisasi}</td>
             <td>${saldo}</td>
